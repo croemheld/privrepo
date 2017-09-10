@@ -1,16 +1,43 @@
 #!/bin/sh
 
 # Get name for new repository
+# Mandatory argument
 REPOSITORY_NAME=$1
 
+# Default values
+SERVER_DEFAULT="git@raspberry"
+FOLDER_DEFAULT=$REPOSITORY_NAME
+
+USAGE=$(
+cat <<EOF
+privrepo <repository name>
+	[-l <user@server>]
+	[-o <directory>]
+	[-h]
+EOF
+)
+
+while getopts "l:o:h" OPTION; do
+	case $OPTION in
+		h) 	echo $USAGE;;
+		l) 	REMOTESERV_ADDR=$OPTARG;;
+		o) 	LDIRECTORY_NAME=$OPTARG;;
+		\?)	echo $USAGE;;
+	esac
+done
+
+# Change default values if neccessary
+: ${REMOTESERV_ADDR=$SERVER_DEFAULT}
+: ${LDIRECTORY_NAME=$FOLDER_DEFAULT}
+
 # Check if repository already exists
-if ssh git@raspberry "[ -d /home/git/$REPOSITORY_NAME.git ]"; then
+if ssh $REMOTESERV_ADDR "[ -d /home/git/$REPOSITORY_NAME.git ]"; then
 	echo "Error: Repository $REPOSITORY_NAME.git already exists on remote server."
 	exit
 fi
 
-if [ -d "$REPOSITORY_NAME" ]; then
-	echo "Error: Repository $REPOSITORY_NAME already exists on local machine."
+if [ -d "$LDIRECTORY_NAME" ]; then
+	echo "Error: Repository $LDIRECTORY_NAME already exists on local machine."
 	exit
 fi
 
@@ -22,11 +49,11 @@ echo "Repository $REPOSITORY_NAME created succesfully."
 echo "Close connection to remote host raspberry."
 
 # Create new repository on local machine
-echo "Create new repository $REPOSITORY_NAME on local maschine..."
-mkdir $REPOSITORY_NAME
-cd $REPOSITORY_NAME
+echo "Create new repository $LDIRECTORY_NAME on local maschine..."
+mkdir $LDIRECTORY_NAME
+cd $LDIRECTORY_NAME
 
-echo "Initialize repository $REPOSITORY_NAME..."
+echo "Initialize repository $LDIRECTORY_NAME..."
 git init
 git remote add origin git@raspberry:$REPOSITORY_NAME
 
@@ -38,4 +65,4 @@ git commit -am "Initial commit"
 
 # Configure branch to follow remote-branch master
 git push --set-upstream origin master
-echo "Finished creating repository $REPOSITORY_NAME."
+echo "Finished creating repository $LDIRECTORY_NAME."
