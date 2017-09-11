@@ -1,27 +1,25 @@
 #!/bin/sh
 
-# Get name for new repository
-# Mandatory argument
-REPOSITORY_NAME=$1
-
 # Default values
 SERVER_DEFAULT="git@raspberry"
 FOLDER_DEFAULT=$REPOSITORY_NAME
 
 USAGE=$(
 cat <<EOF
-privrepo <repository name>
+privrepo
+	[-r <repository>]
 	[-l <user@server>]
 	[-o <directory>]
 	[-h]
 EOF
 )
 
-while getopts "l:o:h" OPTION; do
+while getopts "l:o:r:h" OPTION; do
 	case $OPTION in
 		h) 	echo $USAGE;;
 		l) 	REMOTESERV_ADDR=$OPTARG;;
 		o) 	LDIRECTORY_NAME=$OPTARG;;
+		r) 	REPOSITORY_NAME=$OPTARG;;
 		\?)	echo $USAGE;;
 	esac
 done
@@ -55,7 +53,7 @@ cd $LDIRECTORY_NAME
 
 echo "Initialize repository $LDIRECTORY_NAME..."
 git init
-git remote add origin git@raspberry:$REPOSITORY_NAME
+git remote add origin $REMOTESERV_ADDR:$REPOSITORY_NAME
 
 # Create README.md file for later publication
 echo "Create README.md file..."
