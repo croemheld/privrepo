@@ -4,6 +4,7 @@
 SERVER_DEFAULT="git@raspberry"
 FOLDER_DEFAULT=$REPOSITORY_NAME
 
+# Usage of command
 USAGE=$(
 cat <<EOF
 privrepo
@@ -16,17 +17,27 @@ EOF
 
 while getopts "l:o:r:h" OPTION; do
 	case $OPTION in
-		h) 	echo $USAGE;;
-		l) 	REMOTESERV_ADDR=$OPTARG;;
-		o) 	LDIRECTORY_NAME=$OPTARG;;
-		r) 	REPOSITORY_NAME=$OPTARG;;
+		h) 	echo $USAGE;
+			IS_HELP=true;;
+		l) 	REMOTESERV_ADDR=$OPTARG;
+			IS_MODIFIED_REMOTESERV_ADDR=true;;
+		o) 	LDIRECTORY_NAME=$OPTARG;
+			IS_MODIFIED_LDIRECTORY_NAME=true;;
+		r) 	REPOSITORY_NAME=$OPTARG;
+			IS_MODIFIED_REPOSITORY_NAME=true;;
 		\?)	echo $USAGE;;
 	esac
 done
 
-# Change default values if neccessary
-: ${REMOTESERV_ADDR=$SERVER_DEFAULT}
-: ${LDIRECTORY_NAME=$FOLDER_DEFAULT}
+# Error when no repository name is set
+if ! $IS_MODIFIED_REPOSITORY_NAME && ! $IS_HELP; then
+	echo "You need to specify a name for your repository!"
+	echo $USAGE
+	exit
+fi
+
+: ${REMOTESERV_ADDR-$SERVER_DEFAULT}
+: ${LDIRECTORY_NAME-$FOLDER_DEFAULT}
 
 # Check if repository already exists
 if ssh $REMOTESERV_ADDR "[ -d /home/git/$REPOSITORY_NAME.git ]"; then
