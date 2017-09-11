@@ -78,7 +78,7 @@ if [ -d "$LDIRECTORY_NAME" ]; then
 fi
 
 # Create new repository on raspberry
-echo "Connect to git@raspberry..."
+echo "Connect to $REMOTESERV_ADDR..."
 echo "Create new repository $REPOSITORY_NAME on raspberry..."
 ssh "$REMOTESERV_ADDR" "mkdir $REPOSITORY_NAME.git && cd $REPOSITORY_NAME.git && git init --bare"
 echo "Repository $REPOSITORY_NAME created succesfully."
