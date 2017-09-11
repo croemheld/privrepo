@@ -1,8 +1,14 @@
-#!/bin/sh
+#!/bin/bash
 
-# Default values
+# Default server
 SERVER_DEFAULT="git@raspberry"
-FOLDER_DEFAULT=$REPOSITORY_NAME
+
+# For boolean values
+T="t"
+F="f"
+
+# Name of readme file
+README="README.md"
 
 # Usage of command
 USAGE=$(
@@ -15,32 +21,53 @@ privrepo
 EOF
 )
 
+# Retrieve values of given flags
 while getopts "l:o:r:h" OPTION; do
 	case $OPTION in
 		h) 	echo $USAGE;
-			IS_HELP=true;;
+			IS_HELP="true"
+			exit;;
 		l) 	REMOTESERV_ADDR=$OPTARG;
-			IS_MODIFIED_REMOTESERV_ADDR=true;;
+			IS_MODIFIED_REMOTESERV_ADDR=$T;;
 		o) 	LDIRECTORY_NAME=$OPTARG;
-			IS_MODIFIED_LDIRECTORY_NAME=true;;
+			IS_MODIFIED_LDIRECTORY_NAME=$T;;
 		r) 	REPOSITORY_NAME=$OPTARG;
-			IS_MODIFIED_REPOSITORY_NAME=true;;
+			IS_MODIFIED_REPOSITORY_NAME=$T;;
 		\?)	echo $USAGE;;
 	esac
 done
 
+# Set default boolean values if not defined
+: ${IS_HELP=$F}
+: ${IS_MODIFIED_REMOTESERV_ADDR=$F}
+: ${IS_MODIFIED_LDIRECTORY_NAME=$F}
+: ${IS_MODIFIED_REPOSITORY_NAME=$F}
+
 # Error when no repository name is set
-if ! $IS_MODIFIED_REPOSITORY_NAME && ! $IS_HELP; then
+if [ "$IS_MODIFIED_REPOSITORY_NAME" == "$F" ] && [ "$IS_HELP" == "$F" ]; then
 	echo "You need to specify a name for your repository!"
 	echo $USAGE
 	exit
 fi
 
-: ${REMOTESERV_ADDR-$SERVER_DEFAULT}
-: ${LDIRECTORY_NAME-$FOLDER_DEFAULT}
+# Error when optional arguments -l and/or -o are set but -r is not
+if [[ "$IS_MODIFIED_LDIRECTORY_NAME" == "$T" || "$IS_MODIFIED_REMOTESERV_ADDR" == "$T" ]] && [ "$IS_MODIFIED_REPOSITORY_NAME" == "$F" ]; then
+	echo "You need to specify a name for your repository!"
+	echo $USAGE
+	exit
+fi
+
+# Replace default values
+if [ "$IS_MODIFIED_REMOTESERV_ADDR" == "$F" ]; then
+	: ${REMOTESERV_ADDR=$SERVER_DEFAULT}
+fi
+
+if [ "$IS_MODIFIED_LDIRECTORY_NAME" == "$F" ]; then
+	: ${LDIRECTORY_NAME=$REPOSITORY_NAME}
+fi
 
 # Check if repository already exists
-if ssh $REMOTESERV_ADDR "[ -d /home/git/$REPOSITORY_NAME.git ]"; then
+if ssh "$REMOTESERV_ADDR" "[ -d /home/git/$REPOSITORY_NAME.git ]"; then
 	echo "Error: Repository $REPOSITORY_NAME.git already exists on remote server."
 	exit
 fi
@@ -53,23 +80,23 @@ fi
 # Create new repository on raspberry
 echo "Connect to git@raspberry..."
 echo "Create new repository $REPOSITORY_NAME on raspberry..."
-ssh git@raspberry "mkdir $REPOSITORY_NAME.git && cd $REPOSITORY_NAME.git && git init --bare"
+ssh "$REMOTESERV_ADDR" "mkdir $REPOSITORY_NAME.git && cd $REPOSITORY_NAME.git && git init --bare"
 echo "Repository $REPOSITORY_NAME created succesfully."
 echo "Close connection to remote host raspberry."
 
 # Create new repository on local machine
 echo "Create new repository $LDIRECTORY_NAME on local maschine..."
-mkdir $LDIRECTORY_NAME
-cd $LDIRECTORY_NAME
+mkdir "$LDIRECTORY_NAME"
+cd "$LDIRECTORY_NAME"
 
 echo "Initialize repository $LDIRECTORY_NAME..."
 git init
-git remote add origin $REMOTESERV_ADDR:$REPOSITORY_NAME
+git remote add origin "$REMOTESERV_ADDR":"$REPOSITORY_NAME"
 
 # Create README.md file for later publication
 echo "Create README.md file..."
-echo "# $REPOSITORY_NAME" > README.md
-git add README.md
+echo "# $REPOSITORY_NAME" > "$README"
+git add "$README"
 git commit -am "Initial commit"
 
 # Configure branch to follow remote-branch master
