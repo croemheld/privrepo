@@ -13,32 +13,34 @@ README="README.md"
 # Usage of command
 USAGE=$(
 cat <<EOF
-privrepo
-	[-r <repository>]
+Usage:
+privrepo -r <repository>
 	[-l <user@server>]
 	[-o <directory>]
-	[-h]
+	[-f] Create a README.md file
+	[-h] Show this help
 EOF
 )
 
 # Retrieve values of given flags
-while getopts "l:o:r:h" OPTION; do
+while getopts "l:o:r:fh" OPTION; do
 	case $OPTION in
 		h) 	echo $USAGE;
-			IS_HELP="true"
-			exit;;
+			IS_HELP=$T;;
 		l) 	REMOTESERV_ADDR=$OPTARG;
 			IS_MODIFIED_REMOTESERV_ADDR=$T;;
 		o) 	LDIRECTORY_NAME=$OPTARG;
 			IS_MODIFIED_LDIRECTORY_NAME=$T;;
 		r) 	REPOSITORY_NAME=$OPTARG;
 			IS_MODIFIED_REPOSITORY_NAME=$T;;
+		f) 	IS_README=$T;;
 		\?)	echo $USAGE;;
 	esac
 done
 
 # Set default boolean values if not defined
 : ${IS_HELP=$F}
+: ${IS_README=$F}
 : ${IS_MODIFIED_REMOTESERV_ADDR=$F}
 : ${IS_MODIFIED_LDIRECTORY_NAME=$F}
 : ${IS_MODIFIED_REPOSITORY_NAME=$F}
@@ -57,7 +59,7 @@ if [[ "$IS_MODIFIED_LDIRECTORY_NAME" == "$T" || "$IS_MODIFIED_REMOTESERV_ADDR" =
 	exit
 fi
 
-# Replace default values
+# Set default values
 if [ "$IS_MODIFIED_REMOTESERV_ADDR" == "$F" ]; then
 	: ${REMOTESERV_ADDR=$SERVER_DEFAULT}
 fi
@@ -73,7 +75,7 @@ if ssh "$REMOTESERV_ADDR" "[ -d /home/git/$REPOSITORY_NAME.git ]"; then
 fi
 
 if [ -d "$LDIRECTORY_NAME" ]; then
-	echo "Error: Repository $LDIRECTORY_NAME already exists on local machine."
+	echo "Error: Directory $LDIRECTORY_NAME already exists on local machine."
 	exit
 fi
 
@@ -93,11 +95,16 @@ echo "Initialize repository $LDIRECTORY_NAME..."
 git init
 git remote add origin "$REMOTESERV_ADDR":"$REPOSITORY_NAME"
 
-# Create README.md file for later publication
-echo "Create README.md file..."
-echo "# $REPOSITORY_NAME" > "$README"
-git add "$README"
-git commit -am "Initial commit"
+# README file
+if [ "$IS_README" == "$T" ]; then
+	echo "Create $README file..."
+	echo "# $REPOSITORY_NAME" > "$README"
+	git add "$README"
+	git commit "$README" -m "Initial commit"
+else
+	echo "No files for initial commit"
+	git commit --allow-empty -m "Initial commit"
+fi
 
 # Configure branch to follow remote-branch master
 git push --set-upstream origin master
