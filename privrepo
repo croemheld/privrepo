@@ -90,15 +90,28 @@ CMD_REMOTE+="git init --bare"
 echo "Connect to $REMOTESERV_ADDR..."
 echo "Create new repository $REPOSITORY_NAME on raspberry..."
 ssh "$REMOTESERV_ADDR" "$CMD_REMOTE"
+
+# Check if repository was created successfully
+if ssh "$REMOTESERV_ADDR" "[ ! -d /home/git/$REPOSITORY_NAME.git ]"; then
+	echo "Error: The repository $REPOSITORY_NAME could not be created."
+	exit
+fi
+
 echo "Repository $REPOSITORY_NAME created succesfully."
-echo "Close connection to remote host raspberry."
 
 # Create new repository on local machine
-echo "Create new repository $LDIRECTORY_NAME on local maschine..."
+echo "Create new directory $LDIRECTORY_NAME on local maschine..."
 mkdir "$LDIRECTORY_NAME"
+
+# Check if directory was created successfully
+if [ ! -d "$LDIRECTORY_NAME" ]; then
+	echo "Error: The directory $LDIRECTORY_NAME could not be created."
+	exit
+fi
+
 cd "$LDIRECTORY_NAME"
 
-echo "Initialize repository $LDIRECTORY_NAME..."
+echo "Initialize directory $LDIRECTORY_NAME..."
 git init
 git remote add origin "$REMOTESERV_ADDR":"$REPOSITORY_NAME"
 
