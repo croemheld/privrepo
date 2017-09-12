@@ -53,7 +53,9 @@ if [ "$IS_MODIFIED_REPOSITORY_NAME" == "$F" ] && [ "$IS_HELP" == "$F" ]; then
 fi
 
 # Error when optional arguments -l and/or -o are set but -r is not
-if [[ "$IS_MODIFIED_LDIRECTORY_NAME" == "$T" || "$IS_MODIFIED_REMOTESERV_ADDR" == "$T" ]] && [ "$IS_MODIFIED_REPOSITORY_NAME" == "$F" ]; then
+if [[ "$IS_MODIFIED_LDIRECTORY_NAME" == "$T" || "$IS_MODIFIED_REMOTESERV_ADDR" == "$T" ]] && 
+	[ "$IS_MODIFIED_REPOSITORY_NAME" == "$F" ]; 
+then
 	echo "You need to specify a name for your repository!"
 	echo $USAGE
 	exit
@@ -79,10 +81,15 @@ if [ -d "$LDIRECTORY_NAME" ]; then
 	exit
 fi
 
+# Variable for commands running on remote server
+CMD_REMOTE="mkdir $REPOSITORY_NAME.git && "
+CMD_REMOTE+="cd $REPOSITORY_NAME.git && "
+CMD_REMOTE+="git init --bare"
+
 # Create new repository on raspberry
 echo "Connect to $REMOTESERV_ADDR..."
 echo "Create new repository $REPOSITORY_NAME on raspberry..."
-ssh "$REMOTESERV_ADDR" "mkdir $REPOSITORY_NAME.git && cd $REPOSITORY_NAME.git && git init --bare"
+ssh "$REMOTESERV_ADDR" "$CMD_REMOTE"
 echo "Repository $REPOSITORY_NAME created succesfully."
 echo "Close connection to remote host raspberry."
 
