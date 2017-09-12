@@ -10,7 +10,7 @@ Now you can simply use this file in your terminal by typing
 ```
 $ privrepo -r test-repository
 ```
-It will create a repository on your remote and local machine as well as add a README.md file.
+It will create a repository on your remote server and a clone on your local machine.
 After this, the repository is ready, you don't need to initialize it anymore.
 
 General usage:
