@@ -1,4 +1,4 @@
-INDIR = /bin
+BINDIR = /bin
 
 install:
 	sudo cp privrepo $(BINDIR)/
